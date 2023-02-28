@@ -1,0 +1,25 @@
+{
+    "name": "we-mentoring-pair-matching",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/melaniam/we-mentoring-pair-matching.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/melaniam/we-mentoring-pair-matching/issues"
+    },
+    "homepage": "https://github.com/melaniam/we-mentoring-pair-matching#readme",
+    "dependencies": {
+        "csv-parser": "^3.0.0",
+        "csv-stringify": "^6.2.0",
+        "strip-bom-stream": "^5.0.0"
+    }
+}
