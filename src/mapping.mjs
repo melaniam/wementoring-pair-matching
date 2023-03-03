@@ -112,19 +112,12 @@ export const mapMenteesToMentors = (mentors, mentees) => {
     mentors.forEach((mentor) => {
         mentees.forEach((mentee) => {
             if (isValidPair(mentor, mentee, true)) {
-                // TODO: update with more mentor and mentee details
                 results.push({
-                    mentor: mentor.name,
-                    mentorRole: mentor.role,
-                    mentorAreaOfExpertise: mentor.workingArea,
-                    mentorTopicsLong: mentor.topicsToMentorOn,
-                    mentee: mentee.name,
-                    menteeRole: mentee.role,
-                    menteeTopicsLong: mentee.topicsToBeMentoredOn,
-                    menteeLearningGoal: mentee.learningGoal,
+                    mentor,
+                    mentee,
                 });
 
-                mentor.assignedOnce = true;
+                mentor.assigned = true;
                 mentee.assigned = true;
             }
         });
@@ -133,30 +126,18 @@ export const mapMenteesToMentors = (mentors, mentees) => {
     // Second pass
     console.log('Second Pass');
     mentors.forEach((mentor) => {
-        if (mentor.assignedOnce && mentor.numberOfMentees === '1') {
-            return;
-        }
         console.log(mentor.name);
-
-        const mentorWantsToBeContacted = mentor.numberOfMentees.includes('contact');
 
         mentees.forEach((mentee) => {
             const validPair = isValidPair(mentor, mentee);
 
-            if (validPair && !mentor.assignedTwice && !mentee.assigned) {
-                mentor.assignedTwice = true;
+            if (validPair && !mentor.assigned && !mentee.assigned) {
+                mentor.assigned = true;
                 mentee.assigned = true;
 
                 results.push({
-                    mentor: mentor.name,
-                    mentorRole: mentor.role,
-                    mentorAreaOfExpertise: mentor.workingArea,
-                    mentorTopicsLong: mentor.topicsToMentorOn,
-                    mentee: mentee.name,
-                    menteeRole: mentee.role,
-                    menteeTopicsLong: mentee.topicsToBeMentoredOn,
-                    menteeLearningGoal: mentee.learningGoal,
-                    contact: mentorWantsToBeContacted ? 'contact mentor!' : '',
+                    mentor,
+                    mentee,
                 });
             }
         });
@@ -166,12 +147,7 @@ export const mapMenteesToMentors = (mentors, mentees) => {
     console.log('Third Pass');
 
     mentors.forEach((mentor) => {
-        if ((mentor.assignedOnce && mentor.numberOfMentees === '1') || mentor.assignedTwice) {
-            return;
-        }
         console.log(mentor.name);
-
-        const mentorWantsToBeContacted = mentor.numberOfMentees.includes('contact');
 
         mentees.forEach((mentee) => {
             if (mentor.workplace === mentee.workplace) {
@@ -180,22 +156,13 @@ export const mapMenteesToMentors = (mentors, mentees) => {
 
             const topics = getTopicsOnWhichMenteeCanBeMentoredByMentor(mentor, mentee, true);
 
-            if (topics.length > 0 && !mentor.assignedTwice && !mentee.assigned) {
-                mentor.assignedTwice = true;
+            if (topics.length > 0 && !mentor.assigned && !mentee.assigned) {
+                mentor.assigned = true;
                 mentee.assigned = true;
 
                 results.push({
-                    mentor: mentor.name,
-                    mentorRole: mentor.role,
-                    mentorAreaOfExpertise: mentor.workingArea,
-                    mentorTopicsLong: mentor.topicsToMentorOn,
-                    commonTopics: topics,
-                    mentee: mentee.name,
-                    topics,
-                    menteeRole: mentee.role,
-                    menteeTopicsLong: mentee.topicsToBeMentoredOn,
-                    menteeLearningGoal: mentee.learningGoal,
-                    contact: mentorWantsToBeContacted ? 'contact mentor!' : '',
+                    mentor,
+                    mentee,
                 });
             }
         });
@@ -203,19 +170,9 @@ export const mapMenteesToMentors = (mentors, mentees) => {
 
     // find mentors who were not assigned to anyone
     mentors.forEach((mentor) => {
-        if (!mentor.assignedOnce) {
+        if (!mentor.assigned) {
             results.push({
-                mentor: mentor.name,
-                mentorRole: mentor.role,
-                mentorAreaOfExpertise: mentor.workingArea,
-                mentorTopicsLong: mentor.topicsToMentorOn,
-                commonTopics: '-',
-                mentee: '-',
-                topics: '-',
-                menteeRole: '-',
-                menteeTopicsLong: '-',
-                menteeLearningGoal: '-',
-                contact: mentor.contact ? 'contact mentor!' : '',
+                mentor,
             });
         }
     });
@@ -224,16 +181,7 @@ export const mapMenteesToMentors = (mentors, mentees) => {
     mentees.forEach((mentee) => {
         if (!mentee.assigned) {
             results.push({
-                mentor: '-',
-                mentorRole: '-',
-                mentorAreaOfExpertise: '-',
-                mentorTopicsLong: '-',
-                commonTopics: '-',
-                mentee: mentee.name,
-                topics: '-',
-                menteeRole: mentee.role,
-                menteeTopicsLong: mentee.topicsToBeMentoredOn,
-                menteeLearningGoal: mentee.learningGoal,
+                mentee,
             });
         }
     });
