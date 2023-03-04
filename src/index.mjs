@@ -35,36 +35,68 @@ const menteesPromise = new Promise((resolve, reject) => {
 Promise.all([mentorsPromise, menteesPromise]).then(([mentors, mentees]) => {
     const mappings = mapMenteesToMentors(mentors, mentees);
 
+    const mappingsToExport = mappings.map(({ mentor, mentee }) => ({
+        mentorEmail: mentor ? mentor.email : '-',
+        mentorName: mentor ? mentor.name : '-',
+        mentorRole: mentor ? mentor.role : '-',
+        mentorWorkplace: mentor ? mentor.workplace : '-',
+        mentorLinkedin: mentor ? mentor.linkedin : '-',
+        mentorTypeOfIC: mentor ? mentor.typeOfIC : '-',
+        mentorTypeOfManager: mentor ? mentor.typeOfManager : '-',
+        mentorWorkingArea: mentor ? mentor.workingArea : '-',
+        mentorTopicsToMentorOn: mentor ? mentor.topicsToMentorOn : '-',
+        mentorNumberOfMentees: mentor ? mentor.numberOfMentees : '-',
+        mentorMoreComments: mentor ? mentor.moreComments : '-',
+        mentorAllocateTime: mentor ? mentor.allocateTime : '-',
+        mentorBlockers: mentor ? mentor.blockers : '-',
+
+        menteeEmail: mentee ? mentee.email : '-',
+        menteeName: mentee ? mentee.name : '-',
+        menteeTypeOfIC: mentee ? mentee.typeOfIC : '-',
+        menteeTypeOfManager: mentee ? mentee.typeOfManager : '-',
+        menteeWorkingArea: mentee ? mentee.workingArea : '-',
+        menteeRole: mentee ? mentee.role : '-',
+        menteeWorkplace: mentee ? mentee.workplace : '-',
+        menteeLinkedin: mentee ? mentee.linkedin : '-',
+        menteeLearningGoal: mentee ? mentee.learningGoal : '-',
+        menteeTopicsToBeMentoredOn: mentee ? mentee.topicsToBeMentoredOn : '-',
+        menteeBlockers: mentee ? mentee.blockers : '-',
+        menteeMoreComments: mentee ? mentee.moreComments : '-',
+    }));
+
     const writableStream = fs.createWriteStream(pathToMappingsFile);
     const columns = [
-        // mentor fields
-        // 'email',
-        // 'name',
-        // 'role',
-        // 'workplace',
-        // 'linkedin',
-        // 'typeOfIC',
-        // 'typeOfManager',
-        // 'workingArea',
-        // 'topicsToMentorOn',
-        // 'numberOfMentees',
-        // mentees or mapping fields here?
-
-        'mentor',
+        'mentorEmail',
+        'mentorName',
         'mentorRole',
-        'mentorAreaOfExpertise',
-        'mentorTopicsLong',
-        'commonTopics',
-        'mentee',
+        'mentorWorkplace',
+        'mentorLinkedin',
+        'mentorTypeOfIC',
+        'mentorTypeOfManager',
+        'mentorWorkingArea',
+        'mentorTopicsToMentorOn',
+        'mentorNumberOfMentees',
+        'mentorMoreComments',
+        'mentorAllocateTime',
+        'mentorBlockers',
+
+        'menteeEmail',
+        'menteeName',
+        'menteeTypeOfIC',
+        'menteeTypeOfManager',
+        'menteeWorkingArea',
         'menteeRole',
-        'menteeTopicsLong',
+        'menteeWorkplace',
+        'menteeLinkedin',
         'menteeLearningGoal',
-        'contact',
+        'menteeTopicsToBeMentoredOn',
+        'menteeBlockers',
+        'menteeMoreComments',
     ];
 
     const stringifier = stringify({ header: true, columns: columns });
 
-    mappings.forEach((mapping) => {
+    mappingsToExport.forEach((mapping) => {
         stringifier.write(mapping);
     });
 

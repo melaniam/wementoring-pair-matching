@@ -1,23 +1,27 @@
 const TYPES_OF_IC = {
+    noExperience: {
+        label: 'No Experience',
+        index: 1,
+    },
     student: {
         label: 'Student',
-        index: 1,
+        index: 2,
     },
     junior: {
         label: 'Junior',
-        index: 2,
+        index: 3,
     },
     midLevel: {
         label: 'Mid level',
-        index: 3,
+        index: 4,
     },
     senior: {
         label: 'Senior',
-        index: 4,
+        index: 5,
     },
     expert: {
         label: 'Expert',
-        index: 5,
+        index: 6,
     },
     other: {
         label: 'Other',
@@ -28,15 +32,15 @@ const TYPES_OF_IC = {
 const TYPES_OF_MANAGERS = {
     firstLevelManager: {
         label: 'First level Manager (managing individual contributors, for example Manager)',
-        index: 1,
+        index: 6,
     },
     secondLevelManager: {
         label: 'Second level Manager (managing managers, for example roles such as Head of, Director)',
-        index: 2,
+        index: 7,
     },
     thirdLevelManager: {
         label: 'Third level Manager (managing managers of managers, for example Director, VP,  CxO)',
-        index: 3,
+        index: 8,
     },
     other: {
         label: 'Other',
@@ -52,15 +56,26 @@ const getTypeOfManager = (person) => {
     return Object.values(TYPES_OF_MANAGERS).find((type) => type.label === person.typeOfManager.trim());
 };
 
-const getTopicsOnWhichMenteeCanBeMentoredByMentor = (mentor, mentee, relaxedConditions) => {
+const getTopicsOnWhichMenteeCanBeMentoredByMentor = (mentor, mentee) => {
+    const mentorTopics = mentor.topicsToMentorOn.split(',').map((topic) => topic.trim().toLowerCase());
+    const menteeTopics = mentee.topicsToBeMentoredOn.split(',').map((topic) => topic.trim().toLowerCase());
+
+    const matchingMentorTopics = mentorTopics.filter((mentorTopic) =>
+        menteeTopics.some((menteeTopic) => menteeTopic === mentorTopic)
+    );
+
+    return matchingMentorTopics;
+};
+
+const isValidPair = (mentor, mentee, conditionsAreStrict) => {
     // do not match members of the same company
     if (mentor.workplace === mentee.workplace) {
-        return [];
+        return false;
     }
 
     // Mentors and Mentees should have the same area of expertise
     if (mentor.workingArea !== mentee.workingArea) {
-        return [];
+        return false;
     }
 
     // Mentors and Mentees should be on the same track ( IC or Manager)
@@ -70,39 +85,28 @@ const getTopicsOnWhichMenteeCanBeMentoredByMentor = (mentor, mentee, relaxedCond
     const menteeTypeOfIC = getTypeOfIndividualContributor(mentee);
     const menteeTypeOfManager = getTypeOfManager(mentee);
 
-    if (!relaxedConditions && ((mentorTypeOfIC && menteeTypeOfManager) || (mentorTypeOfManager && menteeTypeOfIC))) {
-        return [];
-    }
-
-    // When conditions are strict,
-    // Mentor should have a higher level of seniority than the mentee with a degree of 1, except for Other
-    const mentorTypeOfRole = mentorTypeOfIC || mentorTypeOfManager || {};
-    const menteeTypeOfRole = menteeTypeOfIC || menteeTypeOfManager || {};
+    const mentorSeniority = mentorTypeOfManager || mentorTypeOfIC || {};
+    const menteeSeniority = menteeTypeOfManager || menteeTypeOfIC || {};
 
     // if they didn't choose "Other", look at the seniority level
     // else try to map everyone to everyone - we need to figure out manually what level of seniority to consider
-    if (mentorTypeOfRole.index && menteeTypeOfRole.index) {
-        const levelDiff = mentorTypeOfRole.index - menteeTypeOfRole.index;
-        if (!relaxedConditions) {
+    if (mentorSeniority.index && menteeSeniority.index) {
+        const levelDiff = mentorSeniority.index - menteeSeniority.index;
+        if (conditionsAreStrict) {
+            // When conditions are strict,
+            // Mentor should have a higher level of seniority than the mentee with a degree of 1, except for Other
             if (levelDiff !== 1) {
-                return [];
+                return false;
             }
         } else {
             // when conditions are more relaxed, the level of seniority can differ a bit more
-            if (levelDiff < 0 || levelDiff > 2) {
-                return [];
+            if (levelDiff < 0 || levelDiff > 3) {
+                return false;
             }
         }
     }
 
-    const mentorTopics = mentor.topicsToMentorOn.split(',').map((topic) => topic.trim());
-    const menteeTopics = mentee.topicsToBeMentoredOn.split(',').map((topic) => topic.trim());
-
-    const matchingMentorTopics = mentorTopics.filter((mentorTopic) =>
-        menteeTopics.some((menteeTopic) => menteeTopic === mentorTopic)
-    );
-
-    return matchingMentorTopics;
+    return true;
 };
 
 export const mapMenteesToMentors = (mentors, mentees) => {
@@ -111,55 +115,56 @@ export const mapMenteesToMentors = (mentors, mentees) => {
     // First pass
     mentors.forEach((mentor) => {
         mentees.forEach((mentee) => {
-            const topics = getTopicsOnWhichMenteeCanBeMentoredByMentor(mentor, mentee);
-
-            if (topics.length > 0) {
-                // TODO: update with more mentor and mentee details
+            if (isValidPair(mentor, mentee, true)) {
                 results.push({
-                    mentor: mentor.name,
-                    mentorRole: mentor.role,
-                    mentorAreaOfExpertise: mentor.workingArea,
-                    mentorTopicsLong: mentor.topicsToMentorOn,
-                    commonTopics: topics,
-                    mentee: mentee.name,
-                    menteeRole: mentee.role,
-                    menteeTopicsLong: mentee.topicsToBeMentoredOn,
-                    menteeLearningGoal: mentee.learningGoal,
+                    mentor,
+                    mentee,
                 });
 
-                mentor.assignedOnce = true;
+                mentor.assigned = true;
                 mentee.assigned = true;
             }
         });
     });
 
     // Second pass
+    console.log('Second Pass');
     mentors.forEach((mentor) => {
-        if (mentor.assignedOnce && mentor.numberOfMentees === '1') {
-            return;
-        }
-
-        const mentorWantsToBeContacted = mentor.numberOfMentees.includes('contact');
-
         mentees.forEach((mentee) => {
-            const topics = getTopicsOnWhichMenteeCanBeMentoredByMentor(mentor, mentee, true);
+            const validPair = isValidPair(mentor, mentee);
 
-            if (topics.length > 0 && !mentor.assignedTwice && !mentee.assigned) {
-                mentor.assignedTwice = true;
+            if (validPair && !mentor.assigned && !mentee.assigned) {
+                mentor.assigned = true;
                 mentee.assigned = true;
 
                 results.push({
-                    mentor: mentor.name,
-                    mentorRole: mentor.role,
-                    mentorAreaOfExpertise: mentor.workingArea,
-                    mentorTopicsLong: mentor.topicsToMentorOn,
-                    commonTopics: topics,
-                    mentee: mentee.name,
-                    topics,
-                    menteeRole: mentee.role,
-                    menteeTopicsLong: mentee.topicsToBeMentoredOn,
-                    menteeLearningGoal: mentee.learningGoal,
-                    contact: mentorWantsToBeContacted ? 'contact mentor!' : '',
+                    mentor,
+                    mentee,
+                });
+            }
+        });
+    });
+
+    // Third Pass
+    console.log('Third Pass');
+
+    mentors.forEach((mentor) => {
+        console.log(mentor.name);
+
+        mentees.forEach((mentee) => {
+            if (mentor.workplace === mentee.workplace) {
+                return false;
+            }
+
+            const topics = getTopicsOnWhichMenteeCanBeMentoredByMentor(mentor, mentee, true);
+
+            if (topics.length > 0 && !mentor.assigned && !mentee.assigned) {
+                mentor.assigned = true;
+                mentee.assigned = true;
+
+                results.push({
+                    mentor,
+                    mentee,
                 });
             }
         });
@@ -167,19 +172,9 @@ export const mapMenteesToMentors = (mentors, mentees) => {
 
     // find mentors who were not assigned to anyone
     mentors.forEach((mentor) => {
-        if (!mentor.assignedOnce) {
+        if (!mentor.assigned) {
             results.push({
-                mentor: mentor.name,
-                mentorRole: mentor.role,
-                mentorAreaOfExpertise: mentor.workingArea,
-                mentorTopicsLong: mentor.topicsToMentorOn,
-                commonTopics: '-',
-                mentee: '-',
-                topics: '-',
-                menteeRole: '-',
-                menteeTopicsLong: '-',
-                menteeLearningGoal: '-',
-                contact: mentor.contact ? 'contact mentor!' : '',
+                mentor,
             });
         }
     });
@@ -188,16 +183,7 @@ export const mapMenteesToMentors = (mentors, mentees) => {
     mentees.forEach((mentee) => {
         if (!mentee.assigned) {
             results.push({
-                mentor: '-',
-                mentorRole: '-',
-                mentorAreaOfExpertise: '-',
-                mentorTopicsLong: '-',
-                commonTopics: '-',
-                mentee: mentee.name,
-                topics: '-',
-                menteeRole: mentee.role,
-                menteeTopicsLong: mentee.topicsToBeMentoredOn,
-                menteeLearningGoal: mentee.learningGoal,
+                mentee,
             });
         }
     });
