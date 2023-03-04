@@ -1,23 +1,27 @@
 const TYPES_OF_IC = {
+    noExperience: {
+        label: 'No Experience',
+        index: 1,
+    },
     student: {
         label: 'Student',
-        index: 1,
+        index: 2,
     },
     junior: {
         label: 'Junior',
-        index: 2,
+        index: 3,
     },
     midLevel: {
         label: 'Mid level',
-        index: 3,
+        index: 4,
     },
     senior: {
         label: 'Senior',
-        index: 4,
+        index: 5,
     },
     expert: {
         label: 'Expert',
-        index: 5,
+        index: 6,
     },
     other: {
         label: 'Other',
@@ -28,15 +32,15 @@ const TYPES_OF_IC = {
 const TYPES_OF_MANAGERS = {
     firstLevelManager: {
         label: 'First level Manager (managing individual contributors, for example Manager)',
-        index: 4,
+        index: 6,
     },
     secondLevelManager: {
         label: 'Second level Manager (managing managers, for example roles such as Head of, Director)',
-        index: 5,
+        index: 7,
     },
     thirdLevelManager: {
         label: 'Third level Manager (managing managers of managers, for example Director, VP,  CxO)',
-        index: 6,
+        index: 8,
     },
     other: {
         label: 'Other',
@@ -53,8 +57,8 @@ const getTypeOfManager = (person) => {
 };
 
 const getTopicsOnWhichMenteeCanBeMentoredByMentor = (mentor, mentee) => {
-    const mentorTopics = mentor.topicsToMentorOn.split(',').map((topic) => topic.trim());
-    const menteeTopics = mentee.topicsToBeMentoredOn.split(',').map((topic) => topic.trim());
+    const mentorTopics = mentor.topicsToMentorOn.split(',').map((topic) => topic.trim().toLowerCase());
+    const menteeTopics = mentee.topicsToBeMentoredOn.split(',').map((topic) => topic.trim().toLowerCase());
 
     const matchingMentorTopics = mentorTopics.filter((mentorTopic) =>
         menteeTopics.some((menteeTopic) => menteeTopic === mentorTopic)
@@ -96,7 +100,7 @@ const isValidPair = (mentor, mentee, conditionsAreStrict) => {
             }
         } else {
             // when conditions are more relaxed, the level of seniority can differ a bit more
-            if (levelDiff < 0 || levelDiff > 2) {
+            if (levelDiff < 0 || levelDiff > 3) {
                 return false;
             }
         }
@@ -126,8 +130,6 @@ export const mapMenteesToMentors = (mentors, mentees) => {
     // Second pass
     console.log('Second Pass');
     mentors.forEach((mentor) => {
-        console.log(mentor.name);
-
         mentees.forEach((mentee) => {
             const validPair = isValidPair(mentor, mentee);
 
@@ -151,7 +153,7 @@ export const mapMenteesToMentors = (mentors, mentees) => {
 
         mentees.forEach((mentee) => {
             if (mentor.workplace === mentee.workplace) {
-                return;
+                return false;
             }
 
             const topics = getTopicsOnWhichMenteeCanBeMentoredByMentor(mentor, mentee, true);
