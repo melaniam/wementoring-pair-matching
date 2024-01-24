@@ -78,6 +78,13 @@ Rename columons based on the mapping below. Remove unused columns.
     ```
 
 2. Copy the `mentees.csv` and `mentors.csv` files inside the `input` folder
-3. Set the log level inside the `src/mapping.js` file to `debug` or `info`.
-4. Run script `node src/index.mjs` or `node src/index.mjs > output/app.log 2>&1` in order to save the logs in a file (for log level == debug).
+3. Set the log level inside the `src/mapping.js` file to `debug` or `info`. Log Level `debug` will give you a lot of information for each step to double check the algo.
+4. Run script
+
+    ```sh
+    node src/index.mjs
+    # or, in order to save the logs in a file called app.log
+    node src/index.mjs > output/app.log 2>&1
+    ```
+
 5. Check the output folder.
