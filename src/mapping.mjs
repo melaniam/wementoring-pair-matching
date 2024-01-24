@@ -204,14 +204,14 @@ export const mapMenteesToMentors = (mentors, mentees) => {
     return results;
 };
 
-const migrateToIT = (mentors, mentees, results) => {
+const changeDomainOfActivity = (mentors, mentees, results) => {
     mentees.forEach((mentee) => {
         // console.log('mentee', mentee);
-        if (mentee.workInIT == 'No') {
+        if (mentee.workInIT == 'No' || (mentee.workInIT == 'Yes' && mentee.changeDomain == 'Yes')) {
             // console.table(
             //     mentors.map((mentor) => ({
             //         mentor: mentor.name,
-            //         changeDomainTo: mentee.changeDomainTo,
+            //         workingArea: mentor.workingArea,
             //         workplace: mentor.workplace,
             //         assigned: mentor.assigned,
             //     }))
@@ -225,7 +225,7 @@ const migrateToIT = (mentors, mentees, results) => {
             // console.table(
             //     validMentors.map((mentor) => ({
             //         mentor: mentor.name,
-            //         changeDomainTo: mentee.changeDomainTo,
+            //         workingArea: mentor.workingArea,
             //         workplace: mentor.workplace,
             //     }))
             // );
@@ -238,15 +238,20 @@ const migrateToIT = (mentors, mentees, results) => {
             // console.table(
             //     sortedValidMentors.map((mentor) => ({
             //         mentor: mentor.name,
-            //         changeDomainTo: mentee.changeDomainTo,
+            //         workingArea: mentor.workingArea,
             //         workplace: mentor.workplace,
             //         typeOfIC: mentor.typeOfIC,
             //         typeOfManager: mentor.typeOfManager,
             //     }))
             // );
+
+            const mentor = sortedValidMentors[0];
+            mentor.assigned = true;
+            mentee.assigned = true;
+
             results.push({
                 mentee,
-                mentor: sortedValidMentors[0],
+                mentor,
             });
         }
     });
@@ -256,7 +261,7 @@ export const newAlgoForMatching = (mentors, mentees) => {
     const results = [];
 
     console.info('First Pass, people that want to migrate to IT.');
-    migrateToIT(mentors, mentees, results);
+    changeDomainOfActivity(mentors, mentees, results);
 
     logPairs(results);
 
