@@ -178,7 +178,7 @@ const changeDomainOfActivity = (mentors, mentees, results) => {
     });
 };
 
-const isMatchBasedOnArea = (mentor, mentee, conditionsAreStrict) => {
+const isMatchBasedOnWorkingArea = (mentor, mentee, conditionsAreStrict) => {
     if (!isValidPair(mentor, mentee)) {
         return false;
     }
@@ -227,7 +227,7 @@ const isMatchBasedOnArea = (mentor, mentee, conditionsAreStrict) => {
 const growInSameArea = (mentors, mentees, results) => {
     mentors.forEach((mentor) => {
         mentees.forEach((mentee) => {
-            if (isMatchBasedOnArea(mentor, mentee, true)) {
+            if (isMatchBasedOnWorkingArea(mentor, mentee, true)) {
                 mentor.assigned = true;
                 mentee.assigned = true;
 
@@ -243,7 +243,7 @@ const growInSameArea = (mentors, mentees, results) => {
 
     mentors.forEach((mentor) => {
         mentees.forEach((mentee) => {
-            if (isMatchBasedOnArea(mentor, mentee, false)) {
+            if (isMatchBasedOnWorkingArea(mentor, mentee, false)) {
                 mentor.assigned = true;
                 mentee.assigned = true;
 
