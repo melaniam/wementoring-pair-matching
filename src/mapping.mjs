@@ -144,9 +144,8 @@ const isValidPair = (mentor, mentee) => {
 
 const changeDomainOfActivity = (mentors, mentees, results) => {
     mentees.forEach((mentee) => {
-        logMentees([mentee], 'Mentee to change domain of activity');
-
         if (mentee.workInIT == 'No' || (mentee.workInIT == 'Yes' && mentee.changeDomain == 'Yes')) {
+            logMentees([mentee], 'Mentee to change domain of activity');
             logMentors(mentors, 'All available mentors');
 
             const validMentors = mentors.filter(
@@ -166,13 +165,16 @@ const changeDomainOfActivity = (mentors, mentees, results) => {
             logMentors(sortedValidMentors, 'Sorted valid mentors');
 
             const mentor = sortedValidMentors[0];
-            mentor.assigned = true;
-            mentee.assigned = true;
 
-            results.push({
-                mentee,
-                mentor,
-            });
+            if (mentor) {
+                mentor.assigned = true;
+                mentee.assigned = true;
+
+                results.push({
+                    mentee,
+                    mentor,
+                });
+            }
         }
         logPairs(results, 'Pairs matched at this step');
     });
@@ -305,6 +307,7 @@ export const mapMenteesToMentors = (mentors, mentees) => {
     assignPriority(mentees);
 
     PRIORITIES_INDEX.forEach((priorityLevel) => {
+        console.info('\nRun matching algorithm for mentees with priority level', priorityLevel);
         runMatchingAlgo(
             mentors,
             mentees.filter((mentee) => mentee.priority === priorityLevel),
