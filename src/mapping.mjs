@@ -49,11 +49,11 @@ const TYPES_OF_MANAGERS = {
 };
 
 const getTypeOfIndividualContributor = (person) => {
-    return Object.values(TYPES_OF_IC).find((type) => type.label === person.typeOfIC.trim());
+    return Object.values(TYPES_OF_IC).find((type) => type.label === person.typeOfIC?.trim());
 };
 
 const getTypeOfManager = (person) => {
-    return Object.values(TYPES_OF_MANAGERS).find((type) => type.label === person.typeOfManager.trim());
+    return Object.values(TYPES_OF_MANAGERS).find((type) => type.label === person.typeOfManager?.trim());
 };
 
 const getTopicsOnWhichMenteeCanBeMentoredByMentor = (mentor, mentee) => {
@@ -65,6 +65,10 @@ const getTopicsOnWhichMenteeCanBeMentoredByMentor = (mentor, mentee) => {
     );
 
     return matchingMentorTopics;
+};
+
+const logPairs = (pairs) => {
+    console.table(pairs.map(({ mentor, mentee }) => ({ mentor: mentor?.name, mentee: mentee?.name })));
 };
 
 const isValidPair = (mentor, mentee, conditionsAreStrict) => {
@@ -113,6 +117,7 @@ export const mapMenteesToMentors = (mentors, mentees) => {
     const results = [];
 
     // First pass
+    console.info('First Pass');
     mentors.forEach((mentor) => {
         mentees.forEach((mentee) => {
             if (isValidPair(mentor, mentee, true)) {
@@ -126,12 +131,13 @@ export const mapMenteesToMentors = (mentors, mentees) => {
             }
         });
     });
+    logPairs(results);
 
-    // Second pass
-    console.log('Second Pass');
+    // Second pass, relax conditions
+    console.info('Second Pass');
     mentors.forEach((mentor) => {
         mentees.forEach((mentee) => {
-            const validPair = isValidPair(mentor, mentee);
+            const validPair = isValidPair(mentor, mentee, false);
 
             if (validPair && !mentor.assigned && !mentee.assigned) {
                 mentor.assigned = true;
@@ -145,12 +151,11 @@ export const mapMenteesToMentors = (mentors, mentees) => {
         });
     });
 
-    // Third Pass
-    console.log('Third Pass');
+    logPairs(results);
 
+    // Third Pass, match on topics
+    console.info('Third Pass');
     mentors.forEach((mentor) => {
-        console.log(mentor.name);
-
         mentees.forEach((mentee) => {
             if (mentor.workplace === mentee.workplace) {
                 return false;
@@ -170,7 +175,10 @@ export const mapMenteesToMentors = (mentors, mentees) => {
         });
     });
 
+    logPairs(results);
+
     // find mentors who were not assigned to anyone
+    console.info("Mentors who weren't assigned to anyone");
     mentors.forEach((mentor) => {
         if (!mentor.assigned) {
             results.push({
@@ -179,7 +187,10 @@ export const mapMenteesToMentors = (mentors, mentees) => {
         }
     });
 
+    logPairs(results);
+
     // find mentees who were not assigned to anyone
+    console.info("Mentees who weren't assigned to anyone");
     mentees.forEach((mentee) => {
         if (!mentee.assigned) {
             results.push({
@@ -187,6 +198,8 @@ export const mapMenteesToMentors = (mentors, mentees) => {
             });
         }
     });
+
+    logPairs(results);
 
     return results;
 };
