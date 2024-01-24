@@ -286,13 +286,13 @@ const learnNewSkills = (mentors, mentees, results) => {
 };
 
 const runMatchingAlgo = (mentors, mentees, results) => {
-    console.info('First Pass, people that want to change the domain of activity.');
+    console.info('\nFirst Pass, people that want to change the domain of activity.');
     changeDomainOfActivity(mentors, mentees, results);
 
-    console.info('Second Pass, people that want to grow in the same area.');
+    console.info('\nSecond Pass, people that want to grow in the same area.');
     growInSameArea(mentors, mentees, results);
 
-    console.info('Third Pass, people that want to learn a new skill.');
+    console.info('\nThird Pass, people that want to learn a new skill.');
     learnNewSkills(mentors, mentees, results);
 };
 
