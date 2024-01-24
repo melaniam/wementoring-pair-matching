@@ -268,7 +268,7 @@ const changeDomainOfActivity = (mentors, mentees, results) => {
     });
 };
 
-const gowInSameArea = (mentors, mentees, results) => {
+const growInSameArea = (mentors, mentees, results) => {
     console.info('Grow in the same area, strict conditions');
     mentors.forEach((mentor) => {
         mentees.forEach((mentee) => {
@@ -350,7 +350,7 @@ export const newAlgoForMatching = (mentors, mentees) => {
     changeDomainOfActivity(mentors, mentees, results);
 
     console.info('Second Pass, people that want to grow in the same area.');
-    gowInSameArea(mentors, mentees, results);
+    growInSameArea(mentors, mentees, results);
 
     console.info('Third Pass, people that want to learn a new skill.');
     learnNewSkills(mentors, mentees, results);
