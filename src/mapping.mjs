@@ -178,7 +178,7 @@ const changeDomainOfActivity = (mentors, mentees, results) => {
             }
         }
     });
-    logPairs(results, 'Pairs matched at this step');
+    logPairs(results, 'Pairs matched so far');
 };
 
 const isMatchBasedOnWorkingArea = (mentor, mentee, conditionsAreStrict) => {
