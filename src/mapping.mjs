@@ -146,7 +146,7 @@ const changeDomainOfActivity = (mentors, mentees, results) => {
     mentees.forEach((mentee) => {
         if (mentee.workInIT == 'No' || (mentee.workInIT == 'Yes' && mentee.changeDomain == 'Yes')) {
             logMentees([mentee], 'Mentee to change domain of activity');
-            logMentors(mentors, 'All available mentors');
+            logMentors(mentors, 'All mentors');
 
             const validMentors = mentors.filter(
                 (mentor) =>
@@ -174,10 +174,11 @@ const changeDomainOfActivity = (mentors, mentees, results) => {
                     mentee,
                     mentor,
                 });
+                logPairs([{ mentor, mentee }], 'Pair matched');
             }
         }
-        logPairs(results, 'Pairs matched at this step');
     });
+    logPairs(results, 'Pairs matched at this step');
 };
 
 const isMatchBasedOnWorkingArea = (mentor, mentee, conditionsAreStrict) => {
