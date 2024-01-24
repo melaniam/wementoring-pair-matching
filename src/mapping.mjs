@@ -72,6 +72,16 @@ const logPairs = (pairs) => {
 };
 
 const isValidPair = (mentor, mentee, conditionsAreStrict) => {
+    // is not the same person
+    if (mentor.email === mentee.email) {
+        return false;
+    }
+
+    // do not match people that have a specific skill to improve
+    if (mentee.learningGoal == 'I have a specific skill I want to improve') {
+        return false;
+    }
+
     // do not match members of the same company
     if (mentor.workplace === mentee.workplace) {
         return false;
@@ -296,14 +306,54 @@ const gowInSameArea = (mentors, mentees, results) => {
     logPairs(results);
 };
 
+const learnNewSkills = (mentors, mentees, results) => {
+    mentors.forEach((mentor) => {
+        mentees.forEach((mentee) => {
+            if (mentor.assigned || mentee.assigned) {
+                return false;
+            }
+
+            if (mentor.email === mentee.email) {
+                return false;
+            }
+
+            if (mentor.workplace === mentee.workplace) {
+                return false;
+            }
+
+            const topics = getTopicsOnWhichMenteeCanBeMentoredByMentor(mentor, mentee, true);
+
+            if (topics.length > 0) {
+                console.log('mentor', mentor, 'mentee', mentee);
+                console.log('topics', topics);
+            }
+
+            if (topics.length > 0) {
+                mentor.assigned = true;
+                mentee.assigned = true;
+
+                results.push({
+                    mentor,
+                    mentee,
+                });
+            }
+        });
+    });
+
+    logPairs(results);
+};
+
 export const newAlgoForMatching = (mentors, mentees) => {
     const results = [];
 
     console.info('First Pass, people that want to change domain.');
     changeDomainOfActivity(mentors, mentees, results);
 
-    console.info('Second Pass, people that do not have a clear goal yet.');
+    console.info('Second Pass, people that want to grow in the same area.');
     gowInSameArea(mentors, mentees, results);
+
+    console.info('Third Pass, people that want to learn a new skill.');
+    learnNewSkills(mentors, mentees, results);
 
     return results;
 };
