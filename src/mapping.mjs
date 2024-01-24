@@ -50,6 +50,20 @@ const TYPES_OF_MANAGERS = {
     },
 };
 
+const GENDER_PRIORITY = {
+    Men: 0,
+    'Non Binary / Other': 1,
+    Woman: 4,
+};
+
+const LOCATION_PRIORITY = {
+    Other: 0,
+    'Romania (excluding Cluj) or Moldova': 1,
+    Cluj: 2,
+};
+
+const PRIORITIES_INDEX = [6, 5, 4, 3, 2, 1, 0];
+
 const logMentors = (mentors, msg) => {
     if (LOG_LEVEL === 'debug') {
         if (msg) console.log(msg);
@@ -268,9 +282,7 @@ const learnNewSkills = (mentors, mentees, results) => {
     });
 };
 
-export const mapMenteesToMentors = (mentors, mentees) => {
-    const results = [];
-
+const runMatchingAlgo = (mentors, mentees, results) => {
     console.info('First Pass, people that want to change the domain of activity.');
     changeDomainOfActivity(mentors, mentees, results);
 
@@ -279,6 +291,26 @@ export const mapMenteesToMentors = (mentors, mentees) => {
 
     console.info('Third Pass, people that want to learn a new skill.');
     learnNewSkills(mentors, mentees, results);
+};
+
+const assignPriority = (mentees) => {
+    mentees.forEach((mentee) => {
+        mentee.priority = GENDER_PRIORITY[mentee.gender] + LOCATION_PRIORITY[mentee.location];
+        if (LOG_LEVEL == 'debug') console.log(mentee.name, 'gets priority', mentee.priority);
+    });
+};
+
+export const mapMenteesToMentors = (mentors, mentees) => {
+    const results = [];
+    assignPriority(mentees);
+
+    PRIORITIES_INDEX.forEach((priorityLevel) => {
+        runMatchingAlgo(
+            mentors,
+            mentees.filter((mentee) => mentee.priority === priorityLevel),
+            results
+        );
+    });
 
     console.info("\nMentors who weren't assigned to anyone");
     mentors.forEach((mentor) => {
