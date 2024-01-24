@@ -257,12 +257,51 @@ const changeDomainOfActivity = (mentors, mentees, results) => {
     });
 };
 
+const gowInSameArea = (mentors, mentees, results) => {
+    console.info('Grow in the same area, strict conditions');
+    mentors.forEach((mentor) => {
+        mentees.forEach((mentee) => {
+            const validPair = isValidPair(mentor, mentee, true);
+
+            if (validPair && !mentor.assigned && !mentee.assigned) {
+                results.push({
+                    mentor,
+                    mentee,
+                });
+
+                mentor.assigned = true;
+                mentee.assigned = true;
+            }
+        });
+    });
+
+    console.info('Grow in the same area, relaxed conditions');
+    mentors.forEach((mentor) => {
+        mentees.forEach((mentee) => {
+            const validPair = isValidPair(mentor, mentee, false);
+
+            if (validPair && !mentor.assigned && !mentee.assigned) {
+                mentor.assigned = true;
+                mentee.assigned = true;
+
+                results.push({
+                    mentor,
+                    mentee,
+                });
+            }
+        });
+    });
+};
+
 export const newAlgoForMatching = (mentors, mentees) => {
     const results = [];
 
-    console.info('First Pass, people that want to migrate to IT.');
+    console.info('First Pass, people that want to change domain.');
     changeDomainOfActivity(mentors, mentees, results);
+    logPairs(results);
 
+    console.info('Second Pass, people that do not have a clear goal yet.');
+    gowInSameArea(mentors, mentees, results);
     logPairs(results);
 
     return results;
