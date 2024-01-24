@@ -1,3 +1,5 @@
+const LOG_LEVEL = 'debug'; // debug or info
+
 const TYPES_OF_IC = {
     noExperience: {
         label: 'No Experience',
@@ -48,6 +50,46 @@ const TYPES_OF_MANAGERS = {
     },
 };
 
+const logMentors = (mentors, msg) => {
+    if (LOG_LEVEL === 'debug') {
+        if (msg) console.log(msg);
+        console.table(
+            mentors.map((mentor) => ({
+                mentor: mentor.name,
+                workingArea: mentor.workingArea,
+                workplace: mentor.workplace.substring(0, 20),
+                // typeOfIC: mentor.typeOfIC,
+                // typeOfManager: mentor.typeOfManager,
+                seniorityLevel: getTypeOfManager(mentor)?.index || getTypeOfIndividualContributor(mentor)?.index || 0,
+                assigned: mentor.assigned,
+            }))
+        );
+    }
+};
+const logMentees = (mentees, msg) => {
+    if (LOG_LEVEL === 'debug') {
+        if (msg) console.log(msg);
+        console.table(
+            mentees.map((mentee) => ({
+                mentee: mentee.name,
+                worksInIT: mentee.workInIT,
+                changeDomain: mentee.changeDomain,
+                changeDomainTo: mentee.changeDomainTo,
+                workingArea: mentee.workingArea,
+                workplace: mentee.workplace.substring(0, 20),
+                seniorityLevel: getTypeOfManager(mentee)?.index || getTypeOfIndividualContributor(mentee)?.index || 0,
+                assigned: mentee.assigned,
+            }))
+        );
+    }
+};
+const logPairs = (pairs, msg) => {
+    if (LOG_LEVEL === 'debug') {
+        if (msg) console.log(msg);
+        console.table(pairs.map(({ mentor, mentee }) => ({ mentor: mentor?.name, mentee: mentee?.name })));
+    }
+};
+
 const getTypeOfIndividualContributor = (person) => {
     return Object.values(TYPES_OF_IC).find((type) => type.label === person.typeOfIC?.trim());
 };
@@ -67,18 +109,14 @@ const getTopicsOnWhichMenteeCanBeMentoredByMentor = (mentor, mentee) => {
     return matchingMentorTopics;
 };
 
-const logPairs = (pairs) => {
-    console.table(pairs.map(({ mentor, mentee }) => ({ mentor: mentor?.name, mentee: mentee?.name })));
-};
-
-const isValidPair = (mentor, mentee, conditionsAreStrict) => {
+const isValidPair = (mentor, mentee) => {
     // is not the same person
     if (mentor.email === mentee.email) {
         return false;
     }
 
-    // do not match people that have a specific skill to improve
-    if (mentee.learningGoal == 'I have a specific skill I want to improve') {
+    // do not match people that are already assigned
+    if (mentor.assigned || mentee.assigned) {
         return false;
     }
 
@@ -87,8 +125,57 @@ const isValidPair = (mentor, mentee, conditionsAreStrict) => {
         return false;
     }
 
+    return true;
+};
+
+const changeDomainOfActivity = (mentors, mentees, results) => {
+    mentees.forEach((mentee) => {
+        logMentees([mentee], 'Mentee to change domain of activity');
+
+        if (mentee.workInIT == 'No' || (mentee.workInIT == 'Yes' && mentee.changeDomain == 'Yes')) {
+            logMentors(mentors, 'All available mentors');
+
+            const validMentors = mentors.filter(
+                (mentor) =>
+                    !mentor.assigned &&
+                    mentor.workplace != mentee.workplace &&
+                    mentor.workingArea === mentee.changeDomainTo
+            );
+            logMentors(validMentors, 'Valid mentors');
+
+            const sortedValidMentors = validMentors.sort((a, b) => {
+                const aSeniority = getTypeOfManager(a)?.index || getTypeOfIndividualContributor(a)?.index || 0;
+                const bSeniority = getTypeOfManager(b)?.index || getTypeOfIndividualContributor(b)?.index || 0;
+
+                return aSeniority - bSeniority;
+            });
+            logMentors(sortedValidMentors, 'Sorted valid mentors');
+
+            const mentor = sortedValidMentors[0];
+            mentor.assigned = true;
+            mentee.assigned = true;
+
+            results.push({
+                mentee,
+                mentor,
+            });
+        }
+        logPairs(results, 'Pairs matched at this step');
+    });
+};
+
+const isMatchBasedOnArea = (mentor, mentee, conditionsAreStrict) => {
+    if (!isValidPair(mentor, mentee)) {
+        return false;
+    }
+
     // Mentors and Mentees should have the same area of expertise
     if (mentor.workingArea !== mentee.workingArea) {
+        return false;
+    }
+
+    // do not match people that have a specific skill to improve
+    if (mentee.learningGoal == 'I have a specific skill I want to improve') {
         return false;
     }
 
@@ -123,176 +210,10 @@ const isValidPair = (mentor, mentee, conditionsAreStrict) => {
     return true;
 };
 
-export const mapMenteesToMentors = (mentors, mentees) => {
-    const results = [];
-
-    // First pass
-    console.info('First Pass');
-    mentors.forEach((mentor) => {
-        mentees.forEach((mentee) => {
-            if (isValidPair(mentor, mentee, true)) {
-                results.push({
-                    mentor,
-                    mentee,
-                });
-
-                mentor.assigned = true;
-                mentee.assigned = true;
-            }
-        });
-    });
-    logPairs(results);
-
-    // Second pass, relax conditions
-    console.info('Second Pass');
-    mentors.forEach((mentor) => {
-        mentees.forEach((mentee) => {
-            const validPair = isValidPair(mentor, mentee, false);
-
-            if (validPair && !mentor.assigned && !mentee.assigned) {
-                mentor.assigned = true;
-                mentee.assigned = true;
-
-                results.push({
-                    mentor,
-                    mentee,
-                });
-            }
-        });
-    });
-
-    logPairs(results);
-
-    // Third Pass, match on topics
-    console.info('Third Pass');
-    mentors.forEach((mentor) => {
-        mentees.forEach((mentee) => {
-            if (mentor.workplace === mentee.workplace) {
-                return false;
-            }
-
-            const topics = getTopicsOnWhichMenteeCanBeMentoredByMentor(mentor, mentee, true);
-
-            if (topics.length > 0 && !mentor.assigned && !mentee.assigned) {
-                mentor.assigned = true;
-                mentee.assigned = true;
-
-                results.push({
-                    mentor,
-                    mentee,
-                });
-            }
-        });
-    });
-
-    logPairs(results);
-
-    // find mentors who were not assigned to anyone
-    console.info("Mentors who weren't assigned to anyone");
-    mentors.forEach((mentor) => {
-        if (!mentor.assigned) {
-            results.push({
-                mentor,
-            });
-        }
-    });
-
-    logPairs(results);
-
-    // find mentees who were not assigned to anyone
-    console.info("Mentees who weren't assigned to anyone");
-    mentees.forEach((mentee) => {
-        if (!mentee.assigned) {
-            results.push({
-                mentee,
-            });
-        }
-    });
-
-    logPairs(results);
-
-    return results;
-};
-
-const changeDomainOfActivity = (mentors, mentees, results) => {
-    mentees.forEach((mentee) => {
-        // console.log('mentee', mentee);
-        if (mentee.workInIT == 'No' || (mentee.workInIT == 'Yes' && mentee.changeDomain == 'Yes')) {
-            // console.table(
-            //     mentors.map((mentor) => ({
-            //         mentor: mentor.name,
-            //         workingArea: mentor.workingArea,
-            //         workplace: mentor.workplace,
-            //         assigned: mentor.assigned,
-            //     }))
-            // );
-            const validMentors = mentors.filter(
-                (mentor) =>
-                    !mentor.assigned &&
-                    mentor.workplace != mentee.workplace &&
-                    mentor.workingArea === mentee.changeDomainTo
-            );
-            // console.table(
-            //     validMentors.map((mentor) => ({
-            //         mentor: mentor.name,
-            //         workingArea: mentor.workingArea,
-            //         workplace: mentor.workplace,
-            //     }))
-            // );
-            const sortedValidMentors = validMentors.sort((a, b) => {
-                const aSeniority = getTypeOfManager(a)?.index || getTypeOfIndividualContributor(a)?.index || 0;
-                const bSeniority = getTypeOfManager(b)?.index || getTypeOfIndividualContributor(b)?.index || 0;
-
-                return aSeniority - bSeniority;
-            });
-            // console.table(
-            //     sortedValidMentors.map((mentor) => ({
-            //         mentor: mentor.name,
-            //         workingArea: mentor.workingArea,
-            //         workplace: mentor.workplace,
-            //         typeOfIC: mentor.typeOfIC,
-            //         typeOfManager: mentor.typeOfManager,
-            //     }))
-            // );
-
-            const mentor = sortedValidMentors[0];
-            mentor.assigned = true;
-            mentee.assigned = true;
-
-            results.push({
-                mentee,
-                mentor,
-            });
-        }
-        logPairs(results);
-    });
-};
-
 const growInSameArea = (mentors, mentees, results) => {
-    console.info('Grow in the same area, strict conditions');
     mentors.forEach((mentor) => {
         mentees.forEach((mentee) => {
-            const validPair = isValidPair(mentor, mentee, true);
-
-            if (validPair && !mentor.assigned && !mentee.assigned) {
-                results.push({
-                    mentor,
-                    mentee,
-                });
-
-                mentor.assigned = true;
-                mentee.assigned = true;
-            }
-        });
-    });
-    logPairs(results);
-
-    console.info('Grow in the same area, relaxed conditions');
-    mentors.forEach((mentor) => {
-        mentees.forEach((mentee) => {
-            const validPair = isValidPair(mentor, mentee, false);
-
-            if (validPair && !mentor.assigned && !mentee.assigned) {
+            if (isMatchBasedOnArea(mentor, mentee, true)) {
                 mentor.assigned = true;
                 mentee.assigned = true;
 
@@ -300,33 +221,36 @@ const growInSameArea = (mentors, mentees, results) => {
                     mentor,
                     mentee,
                 });
+
+                logPairs([{ mentor, mentee }], 'Pair matched using strict conditions');
             }
         });
     });
-    logPairs(results);
+
+    mentors.forEach((mentor) => {
+        mentees.forEach((mentee) => {
+            if (isMatchBasedOnArea(mentor, mentee, false)) {
+                mentor.assigned = true;
+                mentee.assigned = true;
+
+                results.push({
+                    mentor,
+                    mentee,
+                });
+                logPairs([{ mentor, mentee }], 'Pair matched using relaxed conditions');
+            }
+        });
+    });
 };
 
 const learnNewSkills = (mentors, mentees, results) => {
     mentors.forEach((mentor) => {
         mentees.forEach((mentee) => {
-            if (mentor.assigned || mentee.assigned) {
-                return false;
-            }
-
-            if (mentor.email === mentee.email) {
-                return false;
-            }
-
-            if (mentor.workplace === mentee.workplace) {
+            if (!isValidPair(mentor, mentee)) {
                 return false;
             }
 
             const topics = getTopicsOnWhichMenteeCanBeMentoredByMentor(mentor, mentee, true);
-
-            if (topics.length > 0) {
-                console.log('mentor', mentor, 'mentee', mentee);
-                console.log('topics', topics);
-            }
 
             if (topics.length > 0) {
                 mentor.assigned = true;
@@ -336,17 +260,18 @@ const learnNewSkills = (mentors, mentees, results) => {
                     mentor,
                     mentee,
                 });
+
+                logPairs([{ mentor, mentee }], 'Pair matched with common topics.');
+                if (LOG_LEVEL == 'debug') console.log('Topics:', topics);
             }
         });
     });
-
-    logPairs(results);
 };
 
-export const newAlgoForMatching = (mentors, mentees) => {
+export const mapMenteesToMentors = (mentors, mentees) => {
     const results = [];
 
-    console.info('First Pass, people that want to change domain.');
+    console.info('First Pass, people that want to change the domain of activity.');
     changeDomainOfActivity(mentors, mentees, results);
 
     console.info('Second Pass, people that want to grow in the same area.');
@@ -354,6 +279,28 @@ export const newAlgoForMatching = (mentors, mentees) => {
 
     console.info('Third Pass, people that want to learn a new skill.');
     learnNewSkills(mentors, mentees, results);
+
+    console.info("\nMentors who weren't assigned to anyone");
+    mentors.forEach((mentor) => {
+        if (!mentor.assigned) {
+            results.push({
+                mentor,
+            });
+            console.info(' - ', mentor.email);
+        }
+    });
+
+    console.info("\nMentees who weren't assigned to anyone");
+    mentees.forEach((mentee) => {
+        if (!mentee.assigned) {
+            results.push({
+                mentee,
+            });
+            console.info(' - ', mentee.email);
+        }
+    });
+
+    logPairs(results, '\n\nFinal pairs');
 
     return results;
 };

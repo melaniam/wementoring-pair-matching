@@ -3,7 +3,7 @@ import csv from 'csv-parser';
 import stripBom from 'strip-bom-stream';
 import { stringify } from 'csv-stringify';
 
-import { mapMenteesToMentors, newAlgoForMatching } from './mapping.mjs';
+import { mapMenteesToMentors } from './mapping.mjs';
 
 const pathToMentorsFile = './input/mentors.csv';
 const pathToMenteesFile = './input/mentees.csv';
@@ -33,7 +33,7 @@ const menteesPromise = new Promise((resolve, reject) => {
 });
 
 Promise.all([mentorsPromise, menteesPromise]).then(([mentors, mentees]) => {
-    const mappings = newAlgoForMatching(mentors, mentees);
+    const mappings = mapMenteesToMentors(mentors, mentees);
 
     const mappingsToExport = mappings.map(({ mentor, mentee }) => ({
         mentorEmail: mentor ? mentor.email : '-',
