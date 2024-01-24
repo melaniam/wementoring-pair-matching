@@ -203,3 +203,62 @@ export const mapMenteesToMentors = (mentors, mentees) => {
 
     return results;
 };
+
+const migrateToIT = (mentors, mentees, results) => {
+    mentees.forEach((mentee) => {
+        // console.log('mentee', mentee);
+        if (mentee.workInIT == 'No') {
+            // console.table(
+            //     mentors.map((mentor) => ({
+            //         mentor: mentor.name,
+            //         changeDomainTo: mentee.changeDomainTo,
+            //         workplace: mentor.workplace,
+            //         assigned: mentor.assigned,
+            //     }))
+            // );
+            const validMentors = mentors.filter(
+                (mentor) =>
+                    !mentor.assigned &&
+                    mentor.workplace != mentee.workplace &&
+                    mentor.workingArea === mentee.changeDomainTo
+            );
+            // console.table(
+            //     validMentors.map((mentor) => ({
+            //         mentor: mentor.name,
+            //         changeDomainTo: mentee.changeDomainTo,
+            //         workplace: mentor.workplace,
+            //     }))
+            // );
+            const sortedValidMentors = validMentors.sort((a, b) => {
+                const aSeniority = getTypeOfManager(a)?.index || getTypeOfIndividualContributor(a)?.index || 0;
+                const bSeniority = getTypeOfManager(b)?.index || getTypeOfIndividualContributor(b)?.index || 0;
+
+                return aSeniority - bSeniority;
+            });
+            // console.table(
+            //     sortedValidMentors.map((mentor) => ({
+            //         mentor: mentor.name,
+            //         changeDomainTo: mentee.changeDomainTo,
+            //         workplace: mentor.workplace,
+            //         typeOfIC: mentor.typeOfIC,
+            //         typeOfManager: mentor.typeOfManager,
+            //     }))
+            // );
+            results.push({
+                mentee,
+                mentor: sortedValidMentors[0],
+            });
+        }
+    });
+};
+
+export const newAlgoForMatching = (mentors, mentees) => {
+    const results = [];
+
+    console.info('First Pass, people that want to migrate to IT.');
+    migrateToIT(mentors, mentees, results);
+
+    logPairs(results);
+
+    return results;
+};
