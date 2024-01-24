@@ -254,6 +254,7 @@ const changeDomainOfActivity = (mentors, mentees, results) => {
                 mentor,
             });
         }
+        logPairs(results);
     });
 };
 
@@ -274,6 +275,7 @@ const gowInSameArea = (mentors, mentees, results) => {
             }
         });
     });
+    logPairs(results);
 
     console.info('Grow in the same area, relaxed conditions');
     mentors.forEach((mentor) => {
@@ -291,6 +293,7 @@ const gowInSameArea = (mentors, mentees, results) => {
             }
         });
     });
+    logPairs(results);
 };
 
 export const newAlgoForMatching = (mentors, mentees) => {
@@ -298,11 +301,9 @@ export const newAlgoForMatching = (mentors, mentees) => {
 
     console.info('First Pass, people that want to change domain.');
     changeDomainOfActivity(mentors, mentees, results);
-    logPairs(results);
 
     console.info('Second Pass, people that do not have a clear goal yet.');
     gowInSameArea(mentors, mentees, results);
-    logPairs(results);
 
     return results;
 };
