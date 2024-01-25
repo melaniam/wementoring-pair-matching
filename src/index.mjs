@@ -8,6 +8,7 @@ import { mapMenteesToMentors } from './mapping.mjs';
 const pathToMentorsFile = './input/mentors.csv';
 const pathToMenteesFile = './input/mentees.csv';
 const pathToMappingsFile = './output/mappings.csv';
+const multipleMentors = true;
 
 const mentorsPromise = new Promise((resolve, reject) => {
     const mentors = [];
@@ -33,7 +34,7 @@ const menteesPromise = new Promise((resolve, reject) => {
 });
 
 Promise.all([mentorsPromise, menteesPromise]).then(([mentors, mentees]) => {
-    const mappings = mapMenteesToMentors(mentors, mentees);
+    const mappings = mapMenteesToMentors(mentors, mentees, multipleMentors);
 
     const mappingsToExport = mappings.map(({ mentor, mentee }) => ({
         mentorEmail: mentor ? mentor.email : '-',

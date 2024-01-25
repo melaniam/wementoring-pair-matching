@@ -123,14 +123,14 @@ const getTopicsOnWhichMenteeCanBeMentoredByMentor = (mentor, mentee) => {
     return matchingMentorTopics;
 };
 
-const isValidPair = (mentor, mentee) => {
+const isValidPair = (mentor, mentee, multipleMentors) => {
     // is not the same person
     if (mentor.email === mentee.email) {
         return false;
     }
 
     // do not match people that are already assigned
-    if (mentor.assigned || mentee.assigned) {
+    if (mentee.assigned || (mentor.assigned && !multipleMentors)) {
         return false;
     }
 
@@ -142,7 +142,7 @@ const isValidPair = (mentor, mentee) => {
     return true;
 };
 
-const changeDomainOfActivity = (mentors, mentees, results) => {
+const changeDomainOfActivity = (mentors, mentees, results, multipleMentors) => {
     mentees.forEach((mentee) => {
         if (mentee.workInIT == 'No' || (mentee.workInIT == 'Yes' && mentee.changeDomain == 'Yes')) {
             logMentees([mentee], 'Mentee to change domain of activity');
@@ -150,7 +150,7 @@ const changeDomainOfActivity = (mentors, mentees, results) => {
 
             const validMentors = mentors.filter(
                 (mentor) =>
-                    !mentor.assigned &&
+                    (multipleMentors || !mentor.assigned) &&
                     mentor.workplace != mentee.workplace &&
                     mentor.workingArea === mentee.changeDomainTo
             );
@@ -181,8 +181,8 @@ const changeDomainOfActivity = (mentors, mentees, results) => {
     logPairs(results, 'Pairs matched so far');
 };
 
-const isMatchBasedOnWorkingArea = (mentor, mentee, conditionsAreStrict) => {
-    if (!isValidPair(mentor, mentee)) {
+const isMatchBasedOnWorkingArea = (mentor, mentee, conditionsAreStrict, multipleMentors) => {
+    if (!isValidPair(mentor, mentee, multipleMentors)) {
         return false;
     }
 
@@ -227,10 +227,10 @@ const isMatchBasedOnWorkingArea = (mentor, mentee, conditionsAreStrict) => {
     return true;
 };
 
-const growInSameArea = (mentors, mentees, results) => {
+const growInSameArea = (mentors, mentees, results, multipleMentors) => {
     mentors.forEach((mentor) => {
         mentees.forEach((mentee) => {
-            if (isMatchBasedOnWorkingArea(mentor, mentee, true)) {
+            if (isMatchBasedOnWorkingArea(mentor, mentee, true, multipleMentors)) {
                 mentor.assigned = true;
                 mentee.assigned = true;
 
@@ -246,7 +246,7 @@ const growInSameArea = (mentors, mentees, results) => {
 
     mentors.forEach((mentor) => {
         mentees.forEach((mentee) => {
-            if (isMatchBasedOnWorkingArea(mentor, mentee, false)) {
+            if (isMatchBasedOnWorkingArea(mentor, mentee, false, multipleMentors)) {
                 mentor.assigned = true;
                 mentee.assigned = true;
 
@@ -260,10 +260,10 @@ const growInSameArea = (mentors, mentees, results) => {
     });
 };
 
-const learnNewSkills = (mentors, mentees, results) => {
+const learnNewSkills = (mentors, mentees, results, multipleMentors) => {
     mentors.forEach((mentor) => {
         mentees.forEach((mentee) => {
-            if (!isValidPair(mentor, mentee)) {
+            if (!isValidPair(mentor, mentee, multipleMentors)) {
                 return false;
             }
 
@@ -285,15 +285,15 @@ const learnNewSkills = (mentors, mentees, results) => {
     });
 };
 
-const runMatchingAlgo = (mentors, mentees, results) => {
+const runMatchingAlgo = (mentors, mentees, results, multipleMentors) => {
     console.info('\nFirst Pass, people that want to change the domain of activity.');
-    changeDomainOfActivity(mentors, mentees, results);
+    changeDomainOfActivity(mentors, mentees, results, multipleMentors);
 
     console.info('\nSecond Pass, people that want to grow in the same area.');
-    growInSameArea(mentors, mentees, results);
+    growInSameArea(mentors, mentees, results, multipleMentors);
 
     console.info('\nThird Pass, people that want to learn a new skill.');
-    learnNewSkills(mentors, mentees, results);
+    learnNewSkills(mentors, mentees, results, multipleMentors);
 };
 
 const assignPriority = (mentees) => {
@@ -303,7 +303,7 @@ const assignPriority = (mentees) => {
     });
 };
 
-export const mapMenteesToMentors = (mentors, mentees) => {
+export const mapMenteesToMentors = (mentors, mentees, multipleMentors) => {
     const results = [];
     assignPriority(mentees);
 
@@ -312,7 +312,8 @@ export const mapMenteesToMentors = (mentors, mentees) => {
         runMatchingAlgo(
             mentors,
             mentees.filter((mentee) => mentee.priority === priorityLevel),
-            results
+            results,
+            multipleMentors
         );
     });
 
