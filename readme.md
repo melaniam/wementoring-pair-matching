@@ -67,6 +67,29 @@ Rename columons based on the mapping below. Remove unused columns.
 | Is there anything else that is important for us to know? | moreComments |
 | I agree with the processing of personal data. According to the requirements of the GDPR Law 677/2001 regarding the processing of personal data and the free circulation of this data, Women in Tech Cluj manages the personal data that you provide in safe conditions and only for the specified purposes. | **Not Used** |
 
+## Seniority Levels
+
+### Individual Contributor
+
+| Label         | Level |
+| ------------- | ----- |
+| No Experience | 1     |
+| Student       | 2     |
+| Junior        | 3     |
+| Mid level     | 4     |
+| Senior        | 5     |
+| Expert        | 6     |
+| Other         | 0     |
+
+### Managers
+
+| Label                                                                                 | Level |
+| ------------------------------------------------------------------------------------- | ----- |
+| First level Manager (managing individual contributors, for example Manager)           | 6     |
+| Second level Manager (managing managers, for example roles such as Head of, Director) | 7     |
+| Third level Manager (managing managers of managers, for example Director, VP, CxO)    | 8     |
+| Other                                                                                 | 0     |
+
 # Local Setup
 
 1. Create folders `input` and `output`
